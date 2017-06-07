@@ -9,27 +9,27 @@ SVN_AUTH=""
 
 function svn_checkin {
 	echo '... adding files'
-	for file in `svn st ${SVN_DIR} | awk -F" " '{print $1 "|" $2}'`; do
+	svn st ${SVN_DIR} | awk -F" " '{print $1 "|" substr($0, index($0,$2))}' | while read file; do
 		fstatus=`echo $file | cut -d"|" -f1`
 		fname=`echo $file | cut -d"|" -f2`
 
 		if [ "$fstatus" == "?" ]; then
 			if [[ "$fname" == *@* ]]; then
-				svn add $fname@;
+				svn add "$fname@";
 			else
-				svn add $fname;
+				svn add "$fname";
 			fi
 		fi
 		if [ "$fstatus" == "!" ]; then
 			if [[ "$fname" == *@* ]]; then
-				svn rm $fname@;
+				svn rm "$fname@";
 			else
-				svn rm $fname;
+				svn rm "$fname";
 			fi
 		fi
 		if [ "$fstatus" == "~" ]; then
-			rm -rf $fname;
-			svn up $fname;
+			rm -rf "$fname";
+			svn up "$fname";
 		fi
 	done
 	echo '... finished adding files'
@@ -37,7 +37,7 @@ function svn_checkin {
 
 function svn_commit {
 	echo "... committing -> [$author]: $msg";
-	cd $SVN_DIR && svn $SVN_AUTH commit -m "[$author]: $msg" && cd $BASE_DIR;
+	cd $SVN_DIR && svn update && svn $SVN_AUTH commit -m "[$author]: $msg" && cd $BASE_DIR;
 	echo '... committed!'
 }
 
